@@ -242,5 +242,8 @@ for x in range(runs):
     if packsOpened < minPacks:
         minPacks = packsOpened
     runningSum = packsOpened + runningSum
- 
-    print ("Runs: " + str(x+1) + ", Average Packs: " + str(runningSum / float(x+1)) + ", Max Packs: " + str(maxPacks) + ", Min Packs: " + str(minPacks))
+
+    # Uncomment if you wanna see the progress. It will slowdown total running time by a lot though.
+    #print ("Runs: " + str(x+1) + ", Average Packs: " + str(runningSum / float(x+1)) + ", Max Packs: " + str(maxPacks) + ", Min Packs: " + str(minPacks))
+
+print ("Runs: " + str(runs) + ", Average Packs: " + str(runningSum / float(runs)) + ", Max Packs: " + str(maxPacks) + ", Min Packs: " + str(minPacks))

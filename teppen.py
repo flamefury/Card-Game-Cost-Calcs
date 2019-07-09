@@ -2,7 +2,10 @@ import random
 import math
 import sys
 
+# How many packs will it take to open 3 of every card in an expansion?
+# (barring legends, which is one)
 
+# Total card count of each rarity, can be changed for each expac
 # Legendary - 4 for 4 colours, can only have 1 of each
 legendCount = 16
 # Epic - 7 for 4 colours, 3 of each
@@ -11,6 +14,10 @@ epicCount = 28
 rareCount = 56
 # Common - 20 for 4 colours, 3 of each
 commonCount = 80
+
+# Teppen's fatigue timer.
+# Auto-get legend as final card if you don't open one after this many charges
+legendaryMaxCharge = 30
 
 # Soul Counts
 # Golden conversion not included because I don't know how often they appear.
@@ -25,10 +32,6 @@ rareCraft = 200
 epicCraft = 800
 legendCraft = 3200
 
-# How many packs will it take to open 3 of every card in an expansion? (barring leaders)
-# Note: this will not include getting both leaders since the average pack count to
-#       get both leaders is more than the count to get 3 of all the other cards in expansion.
-
 # Number of trials to go through, one trial being akin to one user's experience
 # The more trials, the more accurate the average, but it'll also take a lot longer to run.
 runs = 300000
@@ -36,18 +39,16 @@ runs = 300000
 # Rates, can be changed for each expac
 commonRate = 0.65
 rareRate = 0.28
-rareSixthRate = 0.93
+rareSixthRate = 0.93 # Not really needed but I keep it here for reference anyway
 epicRate = 0.06
 legendRate = 0.01
-
-legendaryMaxCharge = 30
 
 # Convenience variables
 totalCount = legendCount + epicCount + rareCount + commonCount
 
 individualEpicRate = epicRate / epicCount
-individualrareRate = rareRate / rareCount
-individualcommonRate = commonRate / commonCount
+individualRareRate = rareRate / rareCount
+individualCommonRate = commonRate / commonCount
 
 legendThreshold = legendRate
 epicThreshold = legendThreshold + epicRate
@@ -67,7 +68,7 @@ necessarySouls = collectionSoulCraftCost
 # Current collection and animated collection progress
 currentLegends = 0
 collection = []
-for x in range(totalCount):
+for x in range(totalCount): # Legends are the starting indices even though we don't use it. Bad on space usage, easier reading.
     collection.append(0)
 
 def subCraftCost(card):
@@ -81,7 +82,7 @@ def subCraftCost(card):
     else:
         necessarySouls = necessarySouls - commonCraft
 
-def subLiquefyCost(card):
+def subReapCost(card):
     global necessarySouls
     if card < epicStartIndex:
         necessarySouls = necessarySouls - legendReap
@@ -99,13 +100,13 @@ def getCard(card):
     if card < epicStartIndex: # Legend
         # Legend is always one that you don't have in collection. If you have them all, then you can liquefy.
         if currentLegends == legendCount:
-            subLiquefyCost(card)
+            subReapCost(card)
         else:
             currentLegends = currentLegends + 1
             subCraftCost(card)
     else: # Not legend
         if collection[card] == 3:
-            subLiquefyCost(card)
+            subReapCost(card)
         else:
             collection[card] = collection[card] + 1
             subCraftCost(card)
@@ -127,8 +128,9 @@ for x in range(runs):
         packsOpened = packsOpened + 1
         legendCharges = legendCharges + 1
         for i in range(6):
-            # Don't know if this happens on the charge or one after.
-            # Currently assuming on the charge.
+            # Guaranteed legend on last card in pack when at full charge.
+            # NOTE: Don't know if this happens on full charge or one after.
+            #       Currently assuming on full charge.
             if i == 5 and legendCharges == legendaryMaxCharge:
                 legendCharges = 0
                 getCard(0)
@@ -159,5 +161,8 @@ for x in range(runs):
     if packsOpened < minPacks:
         minPacks = packsOpened
     runningSum = packsOpened + runningSum
- 
-    print ("Runs: " + str(x+1) + ", Average Packs: " + str(runningSum / float(x+1)) + ", Max Packs: " + str(maxPacks) + ", Min Packs: " + str(minPacks))
+
+    # This slows down the execution a lot, but it'll let you keep track as it goes.
+    # print ("Runs: " + str(x+1) + ", Average Packs: " + str(runningSum / float(x+1)) + ", Max Packs: " + str(maxPacks) + ", Min Packs: " + str(minPacks))
+
+print ("Runs: " + str(runs) + ", Average Packs: " + str(runningSum / float(runs)) + ", Max Packs: " + str(maxPacks) + ", Min Packs: " + str(minPacks))
